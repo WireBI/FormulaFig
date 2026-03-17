@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "cd client && npm run build",
+  "outputDirectory": "client/.next",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://<YOUR-RAILWAY-PROJECT-URL>/api/:path*"
+    }
+  ]
+}
