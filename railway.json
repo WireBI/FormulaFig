@@ -5,7 +5,7 @@
     "watchPatterns": ["server/**"]
   },
   "deploy": {
-    "startCommand": "cd FormulaFig/server && npm run start",
+    "startCommand": "cd server && npm run start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
