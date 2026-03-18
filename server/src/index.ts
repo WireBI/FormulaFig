@@ -65,7 +65,8 @@ app.get('/api/debug/db', async (req, res) => {
       status: 'connected',
       info: result.rows[0],
       env: {
-        version: '1.0.3-ssl-force',
+        version: '1.0.4-db-check',
+        dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
         hasDatabaseUrl: !!process.env.DATABASE_URL,
@@ -82,7 +83,8 @@ app.get('/api/debug/db', async (req, res) => {
       message: error?.message,
       code: error?.code,
       env: {
-        version: '1.0.3-ssl-force',
+        version: '1.0.4-db-check',
+        dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
         hasDatabaseUrl: !!process.env.DATABASE_URL,
@@ -97,7 +99,7 @@ app.get('/api/debug/db', async (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', version: '1.0.3-ssl-force' });
+  res.status(200).json({ status: 'OK', version: '1.0.4-db-check' });
 });
 
 app.listen(PORT, () => {
