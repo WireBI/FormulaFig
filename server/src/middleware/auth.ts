@@ -26,10 +26,12 @@ export const verifyGoogleToken = async (req: AuthRequest, res: Response, next: N
       return res.status(401).json({ error: 'Invalid Google token payload' });
     }
 
-    // Optional: Add strict email domain checking
-    // if (!payload.email.endsWith('@formulafig.com')) {
-    //   return res.status(403).json({ error: 'Unauthorized domain' });
-    // }
+    const domain = payload.email.split('@')[1];
+    const allowedDomains = ['formulafig.com', 'wirebi.com'];
+    
+    if (!allowedDomains.includes(domain)) {
+      return res.status(403).json({ error: 'Unauthorized domain' });
+    }
 
     req.user = payload;
     next();

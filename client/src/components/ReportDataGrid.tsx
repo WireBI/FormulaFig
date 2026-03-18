@@ -7,6 +7,7 @@ import {
   flexRender,
   ColumnDef,
 } from '@tanstack/react-table';
+import { FileText } from 'lucide-react';
 
 interface ReportDataGridProps {
   data: any[];
