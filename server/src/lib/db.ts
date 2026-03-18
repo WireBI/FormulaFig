@@ -10,8 +10,9 @@ let connector: Connector | undefined;
  * or falls back to DATABASE_URL for local development.
  */
 async function createPool(): Promise<Pool> {
-  // Fallback: if DATABASE_URL is set, use direct connection (local dev)
+  // Fallback: if DATABASE_URL is set, use direct connection (local dev or direct Railway config)
   if (process.env.DATABASE_URL) {
+    console.log('Connecting to database via DATABASE_URL');
     return new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
@@ -24,12 +25,14 @@ async function createPool(): Promise<Pool> {
   const dbName = process.env.DB_NAME || 'postgres';
 
   if (!instanceConnectionName || !gcpCredsJson) {
+    console.warn('DB Config Missing: Provide DATABASE_URL or both INSTANCE_CONNECTION_NAME and GCP_SERVICE_ACCOUNT');
     throw new Error(
       'Missing required env vars: INSTANCE_CONNECTION_NAME and GCP_SERVICE_ACCOUNT must be set, ' +
       'or provide DATABASE_URL for direct connection.'
     );
   }
 
+  console.log('Attempting Cloud SQL IAM connection with Connector');
   const credentials = JSON.parse(gcpCredsJson);
 
   // Create a GoogleAuth instance using the service account credentials
@@ -48,6 +51,7 @@ async function createPool(): Promise<Pool> {
 
   // Cloud SQL IAM users use email without .gserviceaccount.com suffix
   const iamUser = credentials.client_email.replace('.gserviceaccount.com', '');
+  console.log(`Using Cloud SQL IAM username: ${iamUser}`);
 
   const poolConfig: PoolConfig = {
     ...clientOpts,
@@ -56,7 +60,15 @@ async function createPool(): Promise<Pool> {
     max: 10,
   };
 
-  return new Pool(poolConfig);
+  try {
+    const pool = new Pool(poolConfig);
+    // Fast check if it works
+    await pool.query('SELECT 1');
+    return pool;
+  } catch (err: any) {
+    console.error('Failed to initialize DB pool:', err.message);
+    throw err;
+  }
 }
 
 export async function getDbPool(): Promise<Pool> {

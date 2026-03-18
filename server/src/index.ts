@@ -30,11 +30,52 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
     res.json({
       data: result.rows,
       rowCount: result.rowCount,
-      metadata: { executedSql: sql } // Optional for debugging
+      metadata: { executedSql: sql }
     });
   } catch (error: any) {
     console.error('Self-Service API Error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error?.message });
+    // Return the real error message so we can diagnose issues
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      message: error?.message,
+      detail: error?.detail || error?.code || undefined
+    });
+  }
+});
+
+// DB Debug Endpoint (Protected) - helps diagnose connection issues
+app.get('/api/debug/db', verifyGoogleToken, async (req, res) => {
+  try {
+    const result = await query('SELECT current_user, current_database(), version() as pg_version, NOW() as server_time');
+    res.json({
+      status: 'connected',
+      info: result.rows[0],
+      env: {
+        hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
+        hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+        corsOrigin: process.env.CORS_ORIGIN,
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT,
+      }
+    });
+  } catch (error: any) {
+    console.error('DB Debug Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error?.message,
+      code: error?.code,
+      env: {
+        hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
+        hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+        corsOrigin: process.env.CORS_ORIGIN,
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT,
+      }
+    });
   }
 });
 
