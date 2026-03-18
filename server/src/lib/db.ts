@@ -11,6 +11,7 @@ let connector: Connector | undefined;
  */
 async function createPool(): Promise<Pool> {
   // Fallback: if DATABASE_URL is set, use direct connection (local dev or direct Railway config)
+  // This is the recommended method for Railway.
   if (process.env.DATABASE_URL) {
     console.log('Connecting to database via DATABASE_URL');
     return new Pool({
