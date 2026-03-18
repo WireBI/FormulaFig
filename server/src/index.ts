@@ -15,6 +15,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Log DB connection attempt (masking password)
+if (process.env.DATABASE_URL) {
+  const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
+  console.log('Database URL configured:', maskedUrl);
+} else {
+  console.log('No DATABASE_URL found, using Cloud SQL IAM');
+}
+
 // Main Self-Service Reporting Endpoint (Protected)
 app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
   try {
@@ -43,8 +51,8 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
   }
 });
 
-// DB Debug Endpoint (Protected) - helps diagnose connection issues
-app.get('/api/debug/db', verifyGoogleToken, async (req, res) => {
+// DB Debug Endpoint (Public temporarily for debugging)
+app.get('/api/debug/db', async (req, res) => {
   try {
     const result = await query('SELECT current_user, current_database(), version() as pg_version, NOW() as server_time');
     res.json({
