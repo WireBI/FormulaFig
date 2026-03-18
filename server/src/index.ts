@@ -48,88 +48,22 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
     });
   } catch (error: any) {
     console.error('Self-Service API Error:', error);
-    // Return the real error message so we can diagnose issues
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
-      message: error?.message,
-      detail: error?.detail || error?.code || undefined
-    });
-  }
-});
-
-// DB Debug Endpoint (Public temporarily for debugging)
-app.get('/api/debug/db', async (req, res) => {
-  try {
-    const result = await query('SELECT current_user, current_database(), version() as pg_version, NOW() as server_time');
-    const databases = await query('SELECT datname FROM pg_database WHERE datistemplate = false');
-    const columns = await query(`
-      SELECT table_name, column_name, data_type, is_nullable 
-      FROM information_schema.columns 
-      WHERE table_schema = 'public'
-      ORDER BY table_name, ordinal_position
-    `);
-    
-    // Group columns by table
-    const tableSchema: Record<string, any[]> = {};
-    columns.rows.forEach(col => {
-      if (!tableSchema[col.table_name]) tableSchema[col.table_name] = [];
-      tableSchema[col.table_name].push({
-        column: col.column_name,
-        type: col.data_type,
-        nullable: col.is_nullable === 'YES'
-      });
-    });
-
-    res.json({
-      status: 'connected',
-      info: result.rows[0],
-      databases: databases.rows.map(r => r.datname),
-      schema: tableSchema,
-      env: {
-        version: '1.0.7-schema-fetch',
-        dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
-        hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
-        hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
-        hasDatabaseUrl: !!process.env.DATABASE_URL,
-        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
-        corsOrigin: process.env.CORS_ORIGIN,
-        nodeEnv: process.env.NODE_ENV,
-        port: process.env.PORT,
-      }
-    });
-  } catch (error: any) {
-    console.error('DB Debug Error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error?.message,
-      code: error?.code,
-      env: {
-        version: '1.0.7-schema-fetch',
-        dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
-        hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
-        hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
-        hasDatabaseUrl: !!process.env.DATABASE_URL,
-        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
-        corsOrigin: process.env.CORS_ORIGIN,
-        nodeEnv: process.env.NODE_ENV,
-        port: process.env.PORT,
-      }
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', version: '1.0.7-schema-fetch' });
+  res.status(200).json({ status: 'OK', version: '1.0.7-final' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down...');
+  console.log('SIGTERM received, closing DB pool...');
   await closeDb();
   process.exit(0);
 });
