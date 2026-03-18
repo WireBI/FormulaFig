@@ -132,6 +132,12 @@ export const Sidebar = () => {
       isActive: pathname === '/reports/self-service'
     },
     {
+      icon: BarChart3,
+      label: 'Pivot Reports',
+      href: '/pivot',
+      isActive: pathname === '/pivot'
+    },
+    {
       icon: TrendingUp,
       label: 'Sales Reports',
       children: [

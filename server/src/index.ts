@@ -52,9 +52,36 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
   }
 });
 
+// Pivot Data Endpoint (Aggregated for Performance - Option 2)
+app.get('/api/reports/pivot-data', verifyGoogleToken, async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        CAST(sale_date AS DATE) as date,
+        location_id,
+        category_id,
+        description,
+        is_service,
+        returned,
+        SUM(quantity) as quantity,
+        SUM(line_total_amount) as amount
+      FROM vw_mbo_purchase_line_items
+      GROUP BY 1, 2, 3, 4, 5, 6
+      ORDER BY 1 DESC
+      LIMIT 15000;
+    `;
+    
+    const result = await query(sql);
+    res.json(result.rows);
+  } catch (error: any) {
+    console.error('Pivot Data API Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', version: '1.0.7-final' });
+  res.status(200).json({ status: 'OK', version: '1.0.8-pivot' });
 });
 
 app.listen(PORT, () => {
