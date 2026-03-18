@@ -14,9 +14,14 @@ async function createPool(): Promise<Pool> {
   // This is the recommended method for Railway.
   if (process.env.DATABASE_URL) {
     console.log('Connecting to database via DATABASE_URL');
+    // Using explicit SSL config to bypass "unable to verify the first certificate" errors
     return new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      // Ensure we don't timeout too quickly during handshake
+      connectionTimeoutMillis: 10000,
     });
   }
 
