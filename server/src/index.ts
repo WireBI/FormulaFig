@@ -69,7 +69,7 @@ app.get('/api/debug/db', async (req, res) => {
       databases: databases.rows.map(r => r.datname),
       tables: tables.rows.map(r => r.table_name),
       env: {
-        version: '1.0.5-table-check',
+        version: '1.0.6-db-list',
         dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
@@ -87,7 +87,7 @@ app.get('/api/debug/db', async (req, res) => {
       message: error?.message,
       code: error?.code,
       env: {
-        version: '1.0.5-table-check',
+        version: '1.0.6-db-list',
         dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
@@ -103,7 +103,7 @@ app.get('/api/debug/db', async (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', version: '1.0.4-db-check' });
+  res.status(200).json({ status: 'OK', version: '1.0.6-db-list' });
 });
 
 app.listen(PORT, () => {
