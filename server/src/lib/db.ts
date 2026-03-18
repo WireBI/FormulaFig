@@ -2,6 +2,9 @@ import { Pool, PoolConfig } from 'pg';
 import { Connector, IpAddressTypes, AuthTypes } from '@google-cloud/cloud-sql-connector';
 import { GoogleAuth } from 'google-auth-library';
 
+// Force bypass SSL certificate verification for database connections
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 let globalPool: Pool | undefined;
 let connector: Connector | undefined;
 

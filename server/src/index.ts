@@ -59,6 +59,7 @@ app.get('/api/debug/db', async (req, res) => {
       status: 'connected',
       info: result.rows[0],
       env: {
+        version: '1.0.3-ssl-force',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
         hasDatabaseUrl: !!process.env.DATABASE_URL,
@@ -75,6 +76,7 @@ app.get('/api/debug/db', async (req, res) => {
       message: error?.message,
       code: error?.code,
       env: {
+        version: '1.0.3-ssl-force',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
         hasDatabaseUrl: !!process.env.DATABASE_URL,
