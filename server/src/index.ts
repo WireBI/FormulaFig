@@ -61,10 +61,12 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
 app.get('/api/debug/db', async (req, res) => {
   try {
     const result = await query('SELECT current_user, current_database(), version() as pg_version, NOW() as server_time');
+    const databases = await query('SELECT datname FROM pg_database WHERE datistemplate = false');
     const tables = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
     res.json({
       status: 'connected',
       info: result.rows[0],
+      databases: databases.rows.map(r => r.datname),
       tables: tables.rows.map(r => r.table_name),
       env: {
         version: '1.0.5-table-check',
