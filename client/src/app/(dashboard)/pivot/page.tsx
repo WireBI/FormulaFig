@@ -22,8 +22,8 @@ export default function PivotPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pivotState, setPivotState] = useState<any>({
-    rows: ['description'],
-    cols: ['date'],
+    rows: ['category', 'description'],
+    cols: ['year_month'],
     vals: ['amount'],
     aggregatorName: 'Sum',
     rendererName: 'Table',
@@ -45,7 +45,8 @@ export default function PivotPage() {
         const formattedData = result.map((row: any) => ({
             ...row,
             quantity: Number(row.quantity),
-            amount: Number(row.amount)
+            amount: Number(row.amount),
+            // is_service is already formatted as "True"/"False" in SQL
         }));
         setData(formattedData);
       }

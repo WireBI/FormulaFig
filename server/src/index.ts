@@ -57,16 +57,21 @@ app.get('/api/reports/pivot-data', verifyGoogleToken, async (req, res) => {
   try {
     const sql = `
       SELECT 
-        CAST(sale_date AS DATE) as date,
-        location_id,
-        category_id,
-        description,
-        is_service,
-        returned,
-        SUM(quantity) as quantity,
-        SUM(line_total_amount) as amount
-      FROM vw_mbo_purchase_line_items
-      GROUP BY 1, 2, 3, 4, 5, 6
+        CAST(v.sale_date AS DATE) as date,
+        TO_CHAR(v.sale_date, 'YYYY-MM') as year_month,
+        EXTRACT(YEAR FROM v.sale_date) as year,
+        EXTRACT(MONTH FROM v.sale_date) as month,
+        COALESCE(l.name, 'Unknown Location') as location,
+        COALESCE(c.category_name, 'Unknown Category') as category,
+        v.description,
+        CASE WHEN v.is_service THEN 'True' ELSE 'False' END as is_service,
+        v.returned,
+        SUM(v.quantity) as quantity,
+        SUM(v.line_total_amount) as amount
+      FROM vw_mbo_purchase_line_items v
+      LEFT JOIN mbo_locations l ON v.location_id = l.location_id AND v.site_id = l.site_id
+      LEFT JOIN mbo_site_categories c ON v.category_id = c.category_id AND v.site_id = c.site_id
+      GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
       ORDER BY 1 DESC
       LIMIT 15000;
     `;
