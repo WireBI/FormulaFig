@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { buildQuery } from './lib/queryBuilder';
-import { query } from './lib/db';
+import { query, closeDb } from './lib/db';
 import { verifyGoogleToken } from './middleware/auth';
 
 dotenv.config();
@@ -45,4 +45,11 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down...');
+  await closeDb();
+  process.exit(0);
 });
