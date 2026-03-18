@@ -17,6 +17,12 @@ app.use(express.json());
 
 // Log DB connection attempt (masking password)
 if (process.env.DATABASE_URL) {
+  try {
+    const url = new URL(process.env.DATABASE_URL);
+    console.log(`Connecting to Host: ${url.hostname}, Port: ${url.port}, DB: ${url.pathname.substring(1)}, User: ${url.username}`);
+  } catch (e) {
+    console.log('Error parsing DATABASE_URL for logging');
+  }
   const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
   console.log('Database URL configured:', maskedUrl);
 } else {
