@@ -6,7 +6,12 @@
     "server"
   ],
   "scripts": {
-    "build": "npm run build --workspace=server",
+    "build": "npm run build --workspace=client",
     "start": "npm run start --workspace=server"
+  },
+  "devDependencies": {
+    "next": "16.1.7",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   }
 }
