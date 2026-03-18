@@ -11,7 +11,7 @@ export default function Home() {
     if (!token) {
       router.push('/login');
     } else {
-      router.push('/reports/self-service');
+      router.push('/pivot');
     }
   }, [router]);
 

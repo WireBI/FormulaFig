@@ -125,7 +125,7 @@ export default function PivotPage() {
             <p className="text-slate-400 font-bold text-sm mt-3 uppercase tracking-[0.3em]">Crunching 300,000+ line items into optimized summaries</p>
           </div>
         ) : (
-          <div className="pivot-container relative">
+          <div className="pivot-container relative overflow-x-auto">
              <style>{`
                 .pivot-container .pvtUI { width: 100%; border-collapse: collapse; color: #94a3b8; font-size: 13px; font-weight: 500; }
                 .pivot-container .pvtAxisContainer, .pivot-container .pvtVals { 

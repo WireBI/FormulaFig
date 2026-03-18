@@ -126,12 +126,6 @@ export const Sidebar = () => {
 
   const navigation = [
     {
-      icon: LayoutDashboard,
-      label: 'Analytics Explorer',
-      href: '/reports/self-service',
-      isActive: pathname === '/reports/self-service'
-    },
-    {
       icon: BarChart3,
       label: 'Pivot Reports',
       href: '/pivot',
