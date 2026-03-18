@@ -61,11 +61,13 @@ app.post('/api/reports/self-service', verifyGoogleToken, async (req, res) => {
 app.get('/api/debug/db', async (req, res) => {
   try {
     const result = await query('SELECT current_user, current_database(), version() as pg_version, NOW() as server_time');
+    const tables = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
     res.json({
       status: 'connected',
       info: result.rows[0],
+      tables: tables.rows.map(r => r.table_name),
       env: {
-        version: '1.0.4-db-check',
+        version: '1.0.5-table-check',
         dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
@@ -83,7 +85,7 @@ app.get('/api/debug/db', async (req, res) => {
       message: error?.message,
       code: error?.code,
       env: {
-        version: '1.0.4-db-check',
+        version: '1.0.5-table-check',
         dbTarget: process.env.DATABASE_URL ? (new URL(process.env.DATABASE_URL).hostname + ' / ' + new URL(process.env.DATABASE_URL).pathname.substring(1)) : 'none',
         hasInstanceConnectionName: !!process.env.INSTANCE_CONNECTION_NAME,
         hasGcpServiceAccount: !!process.env.GCP_SERVICE_ACCOUNT,
