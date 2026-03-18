@@ -91,7 +91,7 @@ app.get('/api/debug/db', async (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({ status: 'OK', version: '1.0.3-ssl-force' });
 });
 
 app.listen(PORT, () => {
