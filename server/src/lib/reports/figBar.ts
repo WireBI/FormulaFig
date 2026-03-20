@@ -46,7 +46,7 @@ export async function getFigBarPerformance(targetDate?: string, locationId?: str
   }
 
   const getPeriodMetrics = async (start: string, end: string): Promise<MetricSet> => {
-    const locFilter = locationId ? `AND location_id = $3` : '';
+    const locFilter = locationId ? `AND location_id = CAST($3 AS INTEGER)` : '';
     const locParam = locationId ? [locationId] : [];
 
     // Revenue & Split
@@ -54,8 +54,8 @@ export async function getFigBarPerformance(targetDate?: string, locationId?: str
       SELECT 
         SUM(line_total_amount) as total_revenue,
         SUM(CASE WHEN LOWER(description) LIKE '%membership%' THEN line_total_amount ELSE 0 END) as memberships,
-        SUM(CASE WHEN is_service = true AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as treatments,
-        SUM(CASE WHEN is_service = false AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as products
+        SUM(CASE WHEN (is_service = true OR is_service IS NULL) AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as treatments,
+        SUM(CASE WHEN (is_service = false) AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as products
       FROM vw_mbo_purchase_line_items
       WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2 ${locFilter};
     `;
@@ -63,7 +63,7 @@ export async function getFigBarPerformance(targetDate?: string, locationId?: str
     // Guests & AOV
     const guestSql = `
       SELECT COUNT(DISTINCT client_id) as count
-      FROM mbo_sales
+      FROM vw_mbo_purchase_line_items
       WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2 ${locFilter};
     `;
 
