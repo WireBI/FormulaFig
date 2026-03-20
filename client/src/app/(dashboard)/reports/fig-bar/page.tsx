@@ -29,12 +29,36 @@ export default function FigBarPerformance() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'daily' | 'wtd' | 'mtd'>('daily');
+  const [locations, setLocations] = useState<any[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const token = localStorage.getItem('google_token');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/locations`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          setLocations(result);
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('google_token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/reports/fig-bar-performance`, {
+        const url = new URL(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/reports/fig-bar-performance`);
+        if (selectedLocation) url.searchParams.append('locationId', selectedLocation);
+        
+        const response = await fetch(url.toString(), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -49,7 +73,7 @@ export default function FigBarPerformance() {
     };
 
     fetchData();
-  }, []);
+  }, [selectedLocation]);
 
   if (loading) {
     return (
@@ -105,23 +129,44 @@ export default function FigBarPerformance() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Fig Bar Performance</h1>
-          <p className="text-slate-400 font-medium">Real-time performance analytics for Fig Bar operations.</p>
+          <div className="flex items-center gap-3 text-slate-400 font-medium">
+             <Calendar size={14} className="text-blue-400" />
+             <span>Showing data for: <b className="text-slate-200">{data?.metadata?.last_date || '...'}</b></span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-3 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/50">
-          {(['daily', 'wtd', 'mtd'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                period === p 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
-                  : 'text-slate-500 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              {p.toUpperCase()}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-2xl border border-slate-800/50 min-w-[200px]">
+             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                <Filter size={16} />
+             </div>
+             <select 
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="bg-transparent border-none text-sm font-bold text-slate-200 focus:ring-0 cursor-pointer w-full pr-8"
+             >
+                <option value="">All Locations</option>
+                {locations.map(loc => (
+                   <option key={loc.location_id} value={loc.location_id} className="bg-slate-900">{loc.name}</option>
+                ))}
+             </select>
+          </div>
+
+          <div className="flex items-center gap-3 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/50">
+            {(['daily', 'wtd', 'mtd'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  period === p 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                    : 'text-slate-500 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                {p.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

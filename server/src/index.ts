@@ -88,11 +88,23 @@ app.get('/api/reports/pivot-data', verifyGoogleToken, async (req, res) => {
 // Fig Bar Daily Performance Endpoint
 app.get('/api/reports/fig-bar-performance', verifyGoogleToken, async (req, res) => {
   try {
-    const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
-    const metrics = await getFigBarPerformance(date);
+    const date = req.query.date as string;
+    const locationId = req.query.locationId as string;
+    const metrics = await getFigBarPerformance(date, locationId);
     res.json(metrics);
   } catch (error: any) {
     console.error('Fig Bar API Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Locations Endpoint
+app.get('/api/locations', verifyGoogleToken, async (req, res) => {
+  try {
+    const result = await query('SELECT location_id, name FROM mbo_locations ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (error: any) {
+    console.error('Locations API Error:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -4,6 +4,10 @@ export interface FigBarMetrics {
   daily: MetricSet;
   wtd: MetricSet;
   mtd: MetricSet;
+  metadata: {
+    last_date: string;
+    location_id?: string;
+  };
 }
 
 interface MetricSet {
@@ -31,8 +35,20 @@ interface MetricSet {
   };
 }
 
-export async function getFigBarPerformance(targetDate: string): Promise<FigBarMetrics> {
+export async function getFigBarPerformance(targetDate?: string, locationId?: string): Promise<FigBarMetrics> {
+  // If no date provided, find the latest date in the database
+  let activeDate = targetDate;
+  if (!activeDate) {
+    const lastDateRes = await query('SELECT MAX(sale_date) as last_date FROM vw_mbo_purchase_line_items');
+    activeDate = lastDateRes.rows[0]?.last_date 
+      ? new Date(lastDateRes.rows[0].last_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+  }
+
   const getPeriodMetrics = async (start: string, end: string): Promise<MetricSet> => {
+    const locFilter = locationId ? `AND location_id = $3` : '';
+    const locParam = locationId ? [locationId] : [];
+
     // Revenue & Split
     const revSql = `
       SELECT 
@@ -41,14 +57,14 @@ export async function getFigBarPerformance(targetDate: string): Promise<FigBarMe
         SUM(CASE WHEN is_service = true AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as treatments,
         SUM(CASE WHEN is_service = false AND LOWER(description) NOT LIKE '%membership%' THEN line_total_amount ELSE 0 END) as products
       FROM vw_mbo_purchase_line_items
-      WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2;
+      WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2 ${locFilter};
     `;
 
     // Guests & AOV
     const guestSql = `
       SELECT COUNT(DISTINCT client_id) as count
       FROM mbo_sales
-      WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2;
+      WHERE CAST(sale_date AS DATE) >= $1 AND CAST(sale_date AS DATE) <= $2 ${locFilter};
     `;
 
     // New Guests
@@ -71,15 +87,15 @@ export async function getFigBarPerformance(targetDate: string): Promise<FigBarMe
         COUNT(*) as total_appointments,
         SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed_appointments
       FROM mbo_appointments
-      WHERE CAST(start_time AS DATE) >= $1 AND CAST(start_time AS DATE) <= $2;
+      WHERE CAST(start_time AS DATE) >= $1 AND CAST(start_time AS DATE) <= $2 ${locFilter};
     `;
 
     const [revRes, guestRes, newGuestRes, activeRes, bookingRes] = await Promise.all([
-      query(revSql, [start, end]),
-      query(guestSql, [start, end]),
+      query(revSql, [start, end, ...locParam]),
+      query(guestSql, [start, end, ...locParam]),
       query(newGuestSql, [start, end]),
       query(activeMembersSql, [start, end]),
-      query(bookingSql, [start, end])
+      query(bookingSql, [start, end, ...locParam])
     ]);
 
     const rev = revRes.rows[0];
@@ -114,17 +130,25 @@ export async function getFigBarPerformance(targetDate: string): Promise<FigBarMe
     };
   };
 
-  // Helper dates (simplified for now)
-  const d = new Date(targetDate);
+  // Helper dates
+  const d = new Date(activeDate);
   const startOfWeek = new Date(d);
   startOfWeek.setDate(d.getDate() - d.getDay()); // Sunday
   const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
 
   const [daily, wtd, mtd] = await Promise.all([
-    getPeriodMetrics(targetDate, targetDate),
-    getPeriodMetrics(startOfWeek.toISOString().split('T')[0], targetDate),
-    getPeriodMetrics(startOfMonth.toISOString().split('T')[0], targetDate)
+    getPeriodMetrics(activeDate, activeDate),
+    getPeriodMetrics(startOfWeek.toISOString().split('T')[0], activeDate),
+    getPeriodMetrics(startOfMonth.toISOString().split('T')[0], activeDate)
   ]);
 
-  return { daily, wtd, mtd };
+  return { 
+    daily, 
+    wtd, 
+    mtd, 
+    metadata: { 
+      last_date: activeDate,
+      location_id: locationId
+    } 
+  };
 }
