@@ -136,6 +136,7 @@ export const Sidebar = () => {
       label: 'Sales Reports',
       children: [
         { label: 'Overview', href: '/reports/sales' },
+        { label: 'Fig Bar Performance', href: '/reports/fig-bar' },
         { label: 'Forecasts', href: '/reports/forecasts' },
       ]
     },

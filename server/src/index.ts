@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { buildQuery } from './lib/queryBuilder';
 import { query, closeDb } from './lib/db';
 import { verifyGoogleToken } from './middleware/auth';
+import { getFigBarPerformance } from './lib/reports/figBar';
 
 dotenv.config();
 
@@ -80,6 +81,18 @@ app.get('/api/reports/pivot-data', verifyGoogleToken, async (req, res) => {
     res.json(result.rows);
   } catch (error: any) {
     console.error('Pivot Data API Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fig Bar Daily Performance Endpoint
+app.get('/api/reports/fig-bar-performance', verifyGoogleToken, async (req, res) => {
+  try {
+    const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
+    const metrics = await getFigBarPerformance(date);
+    res.json(metrics);
+  } catch (error: any) {
+    console.error('Fig Bar API Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
